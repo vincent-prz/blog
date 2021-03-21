@@ -1,0 +1,303 @@
+<?xml version="1.0" encoding="UTF-8"?><rss xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:content="http://purl.org/rss/1.0/modules/content/" xmlns:atom="http://www.w3.org/2005/Atom" version="2.0"><channel><title><![CDATA[Proven Axiom]]></title><description><![CDATA[A starter blog demonstrating what Gatsby can do.]]></description><link>https://gatsbystarterblogsource.gatsbyjs.io</link><generator>GatsbyJS</generator><lastBuildDate>Sun, 21 Mar 2021 16:00:46 GMT</lastBuildDate><item><title><![CDATA[The Python -m switch]]></title><description><![CDATA[This post will be very short, and aside from explaining what is the -m switch and how it works, it will also serve 2 secondary purposes…]]></description><link>https://gatsbystarterblogsource.gatsbyjs.io/python-m-switch/</link><guid isPermaLink="false">https://gatsbystarterblogsource.gatsbyjs.io/python-m-switch/</guid><pubDate>Sun, 14 Mar 2021 00:00:00 GMT</pubDate><content:encoded>&lt;p&gt;This post will be very short, and aside from explaining what is the -m switch and how it works, it will also serve 2 secondary purposes:&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;putting me back in the habit of writing (I haven’t been writing for more than one year)&lt;/li&gt;
+&lt;li&gt;tightening my own grasp of the -m switch : Python ‘s import system has always been a bit confusing to me.&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h2&gt;What is it ?&lt;/h2&gt;
+&lt;p&gt;The -m (for mod) switch, is a switch you can give to the python interpreter; if you type &lt;code class=&quot;language-text&quot;&gt;python --help&lt;/code&gt;, you ‘ll see the following:&lt;/p&gt;
+&lt;div class=&quot;gatsby-highlight&quot; data-language=&quot;text&quot;&gt;&lt;pre class=&quot;language-text&quot;&gt;&lt;code class=&quot;language-text&quot;&gt;-m mod : run library module as a script (terminates option list)&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;It means that if you have a Python project with the following file hierarchy:&lt;/p&gt;
+&lt;div class=&quot;gatsby-highlight&quot; data-language=&quot;text&quot;&gt;&lt;pre class=&quot;language-text&quot;&gt;&lt;code class=&quot;language-text&quot;&gt;├── foo
+│   └── foo.py&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;You can execute the module contained in the &lt;code class=&quot;language-text&quot;&gt;foo.py&lt;/code&gt;  as a script with the following command: &lt;code class=&quot;language-text&quot;&gt;python -m foo.foo&lt;/code&gt;. Notice the syntax of the argument for the -m switch: it’s a dotted syntax, akin to the syntax for importing modules in Python files. In particular, this syntax &lt;code class=&quot;language-text&quot;&gt;python -m foo/foo.py&lt;/code&gt; wouldn’t be valid.&lt;/p&gt;
+&lt;p&gt;The above example was rather contrived, let’s see a more interesting example, which will involve the notion of module search path. &lt;/p&gt;
+&lt;h2&gt;Example&lt;/h2&gt;
+&lt;p&gt;Let’s consider the following project structure:&lt;/p&gt;
+&lt;div class=&quot;gatsby-highlight&quot; data-language=&quot;text&quot;&gt;&lt;pre class=&quot;language-text&quot;&gt;&lt;code class=&quot;language-text&quot;&gt;├── bar
+│   ├── bar.py
+├── foo
+│   ├── foo.py&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;And let’s assume the module &lt;code class=&quot;language-text&quot;&gt;bar.bar&lt;/code&gt; needs to import something from the &lt;code class=&quot;language-text&quot;&gt;foo.foo&lt;/code&gt; module:&lt;/p&gt;
+&lt;div class=&quot;gatsby-highlight&quot; data-language=&quot;text&quot;&gt;&lt;pre class=&quot;language-text&quot;&gt;&lt;code class=&quot;language-text&quot;&gt;# bar/bar.py
+from foo.foo import foo
+
+
+def bar():
+    foo()
+
+
+if __name__ == &amp;#39;main&amp;#39;:
+    print(&amp;#39;bar module called as script&amp;#39;)&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;Now, let’s say we want to execute the &lt;code class=&quot;language-text&quot;&gt;bar.bar&lt;/code&gt; module as a script, from the project directory. One could try to do:&lt;/p&gt;
+&lt;div class=&quot;gatsby-highlight&quot; data-language=&quot;text&quot;&gt;&lt;pre class=&quot;language-text&quot;&gt;&lt;code class=&quot;language-text&quot;&gt;python bar/bar.py`&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;But then they would have the following error:&lt;/p&gt;
+&lt;div class=&quot;gatsby-highlight&quot; data-language=&quot;text&quot;&gt;&lt;pre class=&quot;language-text&quot;&gt;&lt;code class=&quot;language-text&quot;&gt;ModuleNotFoundError: No module named &amp;#39;foo&amp;#39;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;To understand this, we need to introduce the notion of &lt;em&gt;module search path&lt;/em&gt;. Basically, everytime Python tries to perform an &lt;code class=&quot;language-text&quot;&gt;import&lt;/code&gt; statement, it is looking for the corresponding module / package in a list of directories, which is the module search path.&lt;/p&gt;
+&lt;p&gt;As per the &lt;a href=&quot;https://docs.python.org/3/tutorial/modules.html#the-module-search-path&quot;&gt;Python documentation&lt;/a&gt;, the module search path is initialized from these locations:&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;The directory containing the input script (or the current directory when no file is specified).&lt;/li&gt;
+&lt;li&gt;PYTHONPATH (a list of directory names, with the same syntax as the shell variable PATH).&lt;/li&gt;
+&lt;li&gt;The installation-dependent default.&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;Back to our example: the directory containing the input script is &lt;code class=&quot;language-text&quot;&gt;bar&lt;/code&gt;, from which the &lt;code class=&quot;language-text&quot;&gt;foo&lt;/code&gt; folder is not reachable, hence the &lt;code class=&quot;language-text&quot;&gt;ModuleNotFoundError&lt;/code&gt;. So how do we manage to execute the &lt;code class=&quot;language-text&quot;&gt;bar.bar&lt;/code&gt; module as a script ? We can use the &lt;code class=&quot;language-text&quot;&gt;-m&lt;/code&gt; switch!&lt;/p&gt;
+&lt;div class=&quot;gatsby-highlight&quot; data-language=&quot;text&quot;&gt;&lt;pre class=&quot;language-text&quot;&gt;&lt;code class=&quot;language-text&quot;&gt;python -m bar.bar&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;This way i’ll work as expected and display the following output:&lt;/p&gt;
+&lt;div class=&quot;gatsby-highlight&quot; data-language=&quot;text&quot;&gt;&lt;pre class=&quot;language-text&quot;&gt;&lt;code class=&quot;language-text&quot;&gt;bar module called as script&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;It works because in this case Python considered the folder from which we ran command to be part of tthe module search path; indeed, if let’s look back at the first clause of the module search path initialization: “The directory containing the input script (or the current directory when no file is specified)” - we didn’t specify any file (what we did specify is a module), hence Python took the current directory as part of the module search path, and hence was able to locate the foo/foo.py module.&lt;/p&gt;
+&lt;p&gt;That’s the end of my explanation - I’ll tackle Python’s relative imports (another nemesis of mine) some day if I feel brave.&lt;/p&gt;</content:encoded></item><item><title><![CDATA[CS books I read in 2020]]></title><description><![CDATA[In this article I will be doing a quick review of 4 CS boooks I have been reading in 2020 - well, to be fair out of these 4 books, I have…]]></description><link>https://gatsbystarterblogsource.gatsbyjs.io/cs-books-2020/</link><guid isPermaLink="false">https://gatsbystarterblogsource.gatsbyjs.io/cs-books-2020/</guid><pubDate>Sat, 02 Jan 2021 00:00:00 GMT</pubDate><content:encoded>&lt;p&gt;In this article I will be doing a quick review of 4 CS boooks I have been reading in 2020 - well, to be fair out of these 4 books, I have only completed one, and I have gone through less than the half for the others. Still, I already learned a lot, and I thought the start of this new year was a good opportunity to reflect on my learning.&lt;/p&gt;
+&lt;h2&gt;The Elements of Computing Systems: Building a Modern Computer from First Principles (aka Nand to Tetris)&lt;/h2&gt;
+&lt;h2&gt;Structure and Interpretation of Computer Programs&lt;/h2&gt;
+&lt;p&gt;As far as I recall, I picked up this book for 2 reasons: I heard people say great things about it at RC, and it was marked as “readers also enjoyed” on the Nand to Tetris page in Goodreads.&lt;/p&gt;
+&lt;p&gt;This book contains a a MIT introductory course on programming, which puts an emphasis on two aspects:&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;“programs must be written for people to read, and only incidentally for machines to execute”&lt;/li&gt;
+&lt;li&gt;What techniques can use to control the intellectual complexity of large software systems&lt;/li&gt;
+&lt;li&gt;what it is&lt;/li&gt;
+&lt;li&gt;what I think (at first a succession of toy exercises + not for beginners + love Lisp)&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h2&gt;Types and Programming languages&lt;/h2&gt;
+&lt;h2&gt;Category Theory for the Progammer&lt;/h2&gt;</content:encoded></item><item><title><![CDATA[Creating a lambda calculus interpreter - report]]></title><description><![CDATA[My Recurse Center batch ended a couple weeks ago, and I wanted to write a report on the project which took the biggest part of my time…]]></description><link>https://gatsbystarterblogsource.gatsbyjs.io/lambda-calculus/</link><guid isPermaLink="false">https://gatsbystarterblogsource.gatsbyjs.io/lambda-calculus/</guid><pubDate>Mon, 30 Dec 2019 00:00:00 GMT</pubDate><content:encoded>&lt;p&gt;My &lt;a href=&quot;https://www.recurse.com&quot;&gt;Recurse Center&lt;/a&gt; batch ended a couple weeks ago, and I wanted to write a report on the project which took the biggest part of my time: reading &lt;a href=&quot;https://www.goodreads.com/book/show/112252.Types_and_Programming_Languages&quot;&gt;Types and programming Languages&lt;/a&gt;, and building in Haskell the various flavours of lambda calculi described in the book.&lt;/p&gt;
+&lt;p&gt;I actually ended up only going through the most basic lambda calculus variant (called “untyped” lambda calculus), and building a CLI REPL for it. But I made a few additions, including:&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;The possibility to assign variables.&lt;/li&gt;
+&lt;li&gt;A full beta evaluation mode (while the book only focuses on a call by value strategy).&lt;/li&gt;
+&lt;li&gt;A small webapp embedding the REPL.&lt;/li&gt;
+&lt;li&gt;Inside this webapp, a gamified tutorial with some walkthrough / exercises to learn about lambda calculus. This is far from being perfect, but I encourage you to &lt;a href=&quot;https://vincent-prz.github.io/lambda-calculus-repl/&quot;&gt;try it&lt;/a&gt; if you feel curious!&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;&lt;a href=&quot;https://github.com/vincent-prz/tapl&quot;&gt;Here&lt;/a&gt; is the source code of the project. In the next sections I will go through some interesting challenges I encountered.&lt;/p&gt;
+&lt;h1&gt;Challenge 1: Left recursion&lt;/h1&gt;
+&lt;p&gt;Preliminary note: this section might not make sense if you don’t have knowledge about parsing; in this case you can head to the next section.&lt;/p&gt;
+&lt;p&gt;The (untyped) lambda calculus is conceptually simple, but as often with programming, the devil is in the details. The first notable challenge I faced was related to parsing (which, by the way, is not covered by TAPL).&lt;/p&gt;
+&lt;p&gt;I used the &lt;a href=&quot;https://en.wikipedia.org/wiki/Recursive_descent_parser&quot;&gt;recursive descent&lt;/a&gt; technique, with the help of the &lt;a href=&quot;https://hackage.haskell.org/package/parsec&quot;&gt;parsec&lt;/a&gt; library. Unfortunately, this technique doesn’t deal very well with &lt;a href=&quot;https://en.wikipedia.org/wiki/Left_recursion&quot;&gt;left recursion&lt;/a&gt;. Before explaining what left recursion is, let’s look at the syntax of the lambda calculus:&lt;/p&gt;
+&lt;div class=&quot;gatsby-highlight&quot; data-language=&quot;text&quot;&gt;&lt;pre class=&quot;language-text&quot;&gt;&lt;code class=&quot;language-text&quot;&gt;term -&amp;gt; &amp;lt;abstraction&amp;gt; | &amp;lt;application&amp;gt; | &amp;lt;var&amp;gt;
+abstraction -&amp;gt; λ&amp;lt;var&amp;gt;.&amp;lt;expr&amp;gt;
+application -&amp;gt; &amp;lt;term&amp;gt; &amp;lt;term&amp;gt;
+var -&amp;gt; string&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;In English, this means: &lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;A term is either an abstraction, application, or variable. &lt;/li&gt;
+&lt;li&gt;An abstraction (or function definition) is a lambda symbol followed by a variable, followed by a dot, followed by a term.&lt;/li&gt;
+&lt;li&gt;A function application is two terms separated by a space.&lt;/li&gt;
+&lt;li&gt;A variable is a string.&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;As per Wikipedia:&lt;/p&gt;
+&lt;blockquote&gt;
+&lt;p&gt;a nonterminal is left-recursive if the leftmost symbol in one of its productions is itself (in the case of direct left recursion) or can be made itself by some sequence of substitutions (in the case of indirect left recursion). &lt;/p&gt;
+&lt;/blockquote&gt;
+&lt;p&gt;It turns out that the &lt;code class=&quot;language-text&quot;&gt;application&lt;/code&gt; rule (or nonterminal) is left recursive, because if in its right side we substitute the left &lt;code class=&quot;language-text&quot;&gt;term&lt;/code&gt; by &lt;code class=&quot;language-text&quot;&gt;application&lt;/code&gt; (we know we can because we know from the first rule that a &lt;code class=&quot;language-text&quot;&gt;term&lt;/code&gt; can be an &lt;code class=&quot;language-text&quot;&gt;application&lt;/code&gt;) we get this:&lt;/p&gt;
+&lt;div class=&quot;gatsby-highlight&quot; data-language=&quot;text&quot;&gt;&lt;pre class=&quot;language-text&quot;&gt;&lt;code class=&quot;language-text&quot;&gt;application -&amp;gt; &amp;lt;application&amp;gt; &amp;lt;term&amp;gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;This fits the indirect case of left recursion, which, as said above, cause problems for the parsing technique I used, recursive descent. Namely, it creates an infinite recursion.&lt;/p&gt;
+&lt;p&gt;I spent quite some time on this issue, but I eventually solved it by taking inspiration from the &lt;a href=&quot;http://www.craftinginterpreters.com/parsing-expressions.html&quot;&gt;Crafting Interpreters book&lt;/a&gt;.&lt;/p&gt;
+&lt;p&gt;Writing the parser manually was very instructive, but I think next time I’ll need to parse something, I’ll probably use &lt;a href=&quot;https://en.m.wikipedia.org/wiki/Yacc&quot;&gt;yacc&lt;/a&gt; or &lt;a href=&quot;https://www.haskell.org/happy/&quot;&gt;Happy&lt;/a&gt;, the &lt;code class=&quot;language-text&quot;&gt;yacc&lt;/code&gt; equivalent for Haskell.&lt;/p&gt;
+&lt;h1&gt;Challenge 2: bring Haskell to the browser&lt;/h1&gt;
+&lt;p&gt;I wanted this project to be easily accessible, without needing to download the code and the Haskell ecosystem, hence I decided to make a web version of it.&lt;/p&gt;
+&lt;p&gt;More precisely, I made a frontend only app (or SPA) by compiling my Haskell code to Javascript with &lt;a href=&quot;https://github.com/ghcjs/ghcjs&quot;&gt;GHCJS&lt;/a&gt;. Here are a few things worth mentioning:&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;I had to use the &lt;a href=&quot;https://nixos.org/nix/&quot;&gt;Nix&lt;/a&gt; package manager, since Stack (the haskell package manager I was using) dropped support for it.&lt;/li&gt;
+&lt;li&gt;To develop the app, I started with the &lt;a href=&quot;https://github.com/reflex-frp/reflex&quot;&gt;Reflex&lt;/a&gt; library, but got confused by its API, hence I switched to &lt;a href=&quot;https://github.com/dmjio/miso&quot;&gt;Miso&lt;/a&gt;, which has an API very similar to &lt;a href=&quot;https://elm-lang.org/&quot;&gt;Elm&lt;/a&gt;, or React / Redux. While &lt;code class=&quot;language-text&quot;&gt;Reflex&lt;/code&gt; probably shines with complex UI needs, I believe the much smoother learning curve of &lt;code class=&quot;language-text&quot;&gt;Miso&lt;/code&gt; was more adapted to my needs.&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;All in all, I reckon that this could have been easier with better documentation, but at the end of the day it feels quite good to be able to target the browser with Haskell.&lt;/p&gt;
+&lt;p&gt;To go even further, there is &lt;a href=&quot;https://github.com/obsidiansystems/obelisk&quot;&gt;Obelisk&lt;/a&gt;, which is a platform aiming to target not only the browser, but also desktop and mobile applications, with Haskell.&lt;/p&gt;
+&lt;h1&gt;Other challenges&lt;/h1&gt;
+&lt;p&gt;Here is a quick list of obstacles which were more or less challenging:&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;Prevent &lt;a href=&quot;https://en.wikipedia.org/wiki/Lambda_calculus#Capture-avoiding_substitutions&quot;&gt;variable capture&lt;/a&gt;: this turned out to be quite tricky.&lt;/li&gt;
+&lt;li&gt;Implementing the semantics with &lt;a href=&quot;https://en.wikipedia.org/wiki/Operational_semantics&quot;&gt;operational semantics&lt;/a&gt;.&lt;/li&gt;
+&lt;li&gt;Add some basic CSS to the webapp: I used &lt;a href=&quot;https://bulma.io/&quot;&gt;Bulma&lt;/a&gt;.&lt;/li&gt;
+&lt;li&gt;Get familiar with Haskell tooling (Cabal, Stack).&lt;/li&gt;
+&lt;li&gt;Implement the tutorial / game mechanics.&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h1&gt;What ‘s next ?&lt;/h1&gt;
+&lt;p&gt;I probably won’t finish the book (at least not in the short term). But I would like, at the very least, to implement the simply typed flavour of lambda calculus, in order to to see what it’s like to implement a type checker.&lt;/p&gt;</content:encoded></item><item><title><![CDATA[Understanding Haskell functor derivation with Category Theory]]></title><description><![CDATA[Recently I have been reading the Category for programmers book from Bartosz Milewski, and one thing that amazes me is the realization that…]]></description><link>https://gatsbystarterblogsource.gatsbyjs.io/functor-derivation/</link><guid isPermaLink="false">https://gatsbystarterblogsource.gatsbyjs.io/functor-derivation/</guid><pubDate>Thu, 21 Nov 2019 00:00:00 GMT</pubDate><content:encoded>&lt;p&gt;Recently I have been reading the &lt;a href=&quot;https://bartoszmilewski.com/2014/10/28/category-theory-for-programmers-the-preface/&quot;&gt;Category for programmers&lt;/a&gt; book from Bartosz Milewski, and one thing that amazes me is the realization that the implementation of well known functors such as &lt;code class=&quot;language-text&quot;&gt;Maybe&lt;/code&gt; or &lt;code class=&quot;language-text&quot;&gt;List&lt;/code&gt; could in fact be mechanically derived from some primitive functors.&lt;/p&gt;
+&lt;p&gt;However, I was struggling to understand the demonstration of this result (see the “Functorial Algebraic data Types” section &lt;a href=&quot;https://bartoszmilewski.com/2015/02/03/functoriality/&quot;&gt;here&lt;/a&gt;, or section 8.3 in the pdf). So I decided to try to convince myself with code.&lt;/p&gt;
+&lt;h1&gt;TL; DR&lt;/h1&gt;
+&lt;p&gt;If you want to get the result directly, here it is: you can automatically derive &lt;code class=&quot;language-text&quot;&gt;Functor&lt;/code&gt; instances from algebraic data types (ie sum and / or products of types), much like you would derive &lt;code class=&quot;language-text&quot;&gt;Eq&lt;/code&gt; or &lt;code class=&quot;language-text&quot;&gt;Show&lt;/code&gt; instances. To that end, you can use the &lt;a href=&quot;https://downloads.haskell.org/~ghc/latest/docs/html/users_guide/glasgow_exts.html#extension-DeriveFunctor&quot;&gt;DerivFunctor extension&lt;/a&gt;.&lt;/p&gt;
+&lt;p&gt;For instance, you could redefine the Maybe type and automagically  derive its &lt;code class=&quot;language-text&quot;&gt;Functor&lt;/code&gt; instance this way.&lt;/p&gt;
+&lt;div class=&quot;gatsby-highlight&quot; data-language=&quot;text&quot;&gt;&lt;pre class=&quot;language-text&quot;&gt;&lt;code class=&quot;language-text&quot;&gt;{-# LANGUAGE DeriveFunctor #-}
+
+-- first hide the Maybe from the standard Prelude
+import Prelude hiding (Maybe(..))
+
+data Maybe a = Nothing | Just a
+  deriving Functor&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;h1&gt;Functoriality of algebraic data types, examples&lt;/h1&gt;
+&lt;p&gt;The underlying property which permits this mechanical derivation can be stated this way: a parameterized algebraic data type (ADT) &lt;code class=&quot;language-text&quot;&gt;T&lt;/code&gt; is functorial in any of its type parameters.&lt;/p&gt;
+&lt;p&gt;For example, according to this result, the ADT &lt;code class=&quot;language-text&quot;&gt;Maybe a&lt;/code&gt; is functorial in &lt;code class=&quot;language-text&quot;&gt;a&lt;/code&gt;. The following ADT:&lt;/p&gt;
+&lt;div class=&quot;gatsby-highlight&quot; data-language=&quot;text&quot;&gt;&lt;pre class=&quot;language-text&quot;&gt;&lt;code class=&quot;language-text&quot;&gt;newtype Pair a b =
+  Pair (a, b)&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;is functorial in &lt;code class=&quot;language-text&quot;&gt;a&lt;/code&gt; and &lt;code class=&quot;language-text&quot;&gt;b&lt;/code&gt;. Indeed, the following &lt;code class=&quot;language-text&quot;&gt;Functor&lt;/code&gt; instance accounts for the functoriality in &lt;code class=&quot;language-text&quot;&gt;b&lt;/code&gt;:&lt;/p&gt;
+&lt;div class=&quot;gatsby-highlight&quot; data-language=&quot;text&quot;&gt;&lt;pre class=&quot;language-text&quot;&gt;&lt;code class=&quot;language-text&quot;&gt;instance Functor (Pair a) where
+  fmap f (Pair (a, b)) = Pair (a, f b)&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;Haskell doesn’t allow us to declare a &lt;code class=&quot;language-text&quot;&gt;Functor&lt;/code&gt; of &lt;code class=&quot;language-text&quot;&gt;Pair&lt;/code&gt; in &lt;code class=&quot;language-text&quot;&gt;a&lt;/code&gt;, but we can get its equivalent by declaring another type:&lt;/p&gt;
+&lt;div class=&quot;gatsby-highlight&quot; data-language=&quot;text&quot;&gt;&lt;pre class=&quot;language-text&quot;&gt;&lt;code class=&quot;language-text&quot;&gt;newtype ReversedPair b a =
+  ReversedPair (a, b)
+
+instance Functor (ReversedPair b) where
+  fmap f (ReversedPair (a, b)) = ReversedPair (f a, b)&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;&lt;code class=&quot;language-text&quot;&gt;ReversedPair&lt;/code&gt; is the same as &lt;code class=&quot;language-text&quot;&gt;Pair&lt;/code&gt;, but with parameterized types reversed. This accounts for the functoriality of &lt;code class=&quot;language-text&quot;&gt;Pair&lt;/code&gt; in &lt;code class=&quot;language-text&quot;&gt;a&lt;/code&gt;.&lt;/p&gt;
+&lt;h1&gt;Functoriality of algebraic data types: refinement&lt;/h1&gt;
+&lt;p&gt;The result stated in the previous section can actually be refined. Indeed, not only do we know that a parameterized ADT is functorial in any of its parameterized types, but we also know how to build the corresponding functors.&lt;/p&gt;
+&lt;p&gt;Namely, those functors can mechanically be derived from the following things:&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;the &lt;code class=&quot;language-text&quot;&gt;Functor&lt;/code&gt; instance for &lt;code class=&quot;language-text&quot;&gt;Const ()&lt;/code&gt;&lt;/li&gt;
+&lt;li&gt;the &lt;code class=&quot;language-text&quot;&gt;Functor&lt;/code&gt; instance for &lt;code class=&quot;language-text&quot;&gt;Identity&lt;/code&gt;&lt;/li&gt;
+&lt;li&gt;The &lt;code class=&quot;language-text&quot;&gt;Bifunctor&lt;/code&gt; instance for &lt;code class=&quot;language-text&quot;&gt;Either&lt;/code&gt;&lt;/li&gt;
+&lt;li&gt;The &lt;code class=&quot;language-text&quot;&gt;Bifunctor&lt;/code&gt; instance for &lt;code class=&quot;language-text&quot;&gt;(,)&lt;/code&gt;&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;How do we prove that ? The proof can be decomposed like this:&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;(Fact 1): we know from, as Bartosz Milewski is saying in the paragraph we are looking at, that any algebraic data type is isomorphic to a combination of sum and products of &lt;code class=&quot;language-text&quot;&gt;Const ()&lt;/code&gt; and &lt;code class=&quot;language-text&quot;&gt;Identity&lt;/code&gt;. So &lt;code class=&quot;language-text&quot;&gt;Const ()&lt;/code&gt; and &lt;code class=&quot;language-text&quot;&gt;Indentity&lt;/code&gt; can be seen as basic building blocks for ADT. Moreover, we know that &lt;code class=&quot;language-text&quot;&gt;sum&lt;/code&gt; and &lt;code class=&quot;language-text&quot;&gt;product&lt;/code&gt; can be be represented as &lt;code class=&quot;language-text&quot;&gt;Either&lt;/code&gt;s and tuples respectively (ie via the &lt;code class=&quot;language-text&quot;&gt;(,)&lt;/code&gt; operator).&lt;/li&gt;
+&lt;li&gt;(Fact 2): a finite sum and / or product of basic ADTs is functorial. This result can be obtained by induction, the base case being &lt;code class=&quot;language-text&quot;&gt;Const ()&lt;/code&gt; and &lt;code class=&quot;language-text&quot;&gt;Identity&lt;/code&gt;, and the induction case being the sum or product of a functorial ADT with &lt;code class=&quot;language-text&quot;&gt;Const ()&lt;/code&gt; or &lt;code class=&quot;language-text&quot;&gt;Identity&lt;/code&gt;.&lt;/li&gt;
+&lt;li&gt;(Fact 3): We can deduce from Fact 1 and fact 2 that any ADT is functorial, with the added bonus that we know how to mechanically build the corresponding functors.&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;Fact 1 being known, let’s try to get an intuition of why Fact 2 Fact 3 are true.&lt;/p&gt;
+&lt;h1&gt;“Proof” with code (Part 1)&lt;/h1&gt;
+&lt;p&gt;Recall that Fact 2 is obtained by induction. The base case is trivial, since both basic ADTs are notoriously functorial.&lt;/p&gt;
+&lt;p&gt;Let’s move on to the induction case. It can be stated as follows: let T be a functorial ADT; then &lt;code class=&quot;language-text&quot;&gt;T+Const()&lt;/code&gt;, &lt;code class=&quot;language-text&quot;&gt;T*Const ()&lt;/code&gt;, &lt;code class=&quot;language-text&quot;&gt;T+Identity&lt;/code&gt; and &lt;code class=&quot;language-text&quot;&gt;T*Identity&lt;/code&gt; are functorial.&lt;/p&gt;
+&lt;p&gt;To simplify things, let’s try to convince ourselves of this induction with a sum or product of two basic ADTs (ie &lt;code class=&quot;language-text&quot;&gt;Const ()&lt;/code&gt; or &lt;code class=&quot;language-text&quot;&gt;Identity&lt;/code&gt;).&lt;/p&gt;
+&lt;p&gt;Such an ADT can be represented by the following type:&lt;/p&gt;
+&lt;div class=&quot;gatsby-highlight&quot; data-language=&quot;text&quot;&gt;&lt;pre class=&quot;language-text&quot;&gt;&lt;code class=&quot;language-text&quot;&gt;newtype BiComp bf fu gu a b =
+  BiComp (bf (fu a) (gu b))&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;Where &lt;code class=&quot;language-text&quot;&gt;bf&lt;/code&gt; represents the sum or the product of two basics ADTS &lt;code class=&quot;language-text&quot;&gt;fu&lt;/code&gt; and &lt;code class=&quot;language-text&quot;&gt;gu&lt;/code&gt;; &lt;code class=&quot;language-text&quot;&gt;a&lt;/code&gt; and &lt;code class=&quot;language-text&quot;&gt;b&lt;/code&gt; are the parameters of the ADT.&lt;/p&gt;
+&lt;p&gt;So proving Fact 2 amounts to prove that BiComp is functorial in &lt;code class=&quot;language-text&quot;&gt;a&lt;/code&gt; and &lt;code class=&quot;language-text&quot;&gt;b&lt;/code&gt;. Let’s review our assumptions:&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;code class=&quot;language-text&quot;&gt;fu&lt;/code&gt; is &lt;code class=&quot;language-text&quot;&gt;Const ()&lt;/code&gt; or &lt;code class=&quot;language-text&quot;&gt;Identity&lt;/code&gt;. In particular, it is functorial.&lt;/li&gt;
+&lt;li&gt;&lt;code class=&quot;language-text&quot;&gt;gu&lt;/code&gt; is &lt;code class=&quot;language-text&quot;&gt;Const ()&lt;/code&gt; or &lt;code class=&quot;language-text&quot;&gt;Identity&lt;/code&gt;. In particular, it is functorial.&lt;/li&gt;
+&lt;li&gt;&lt;code class=&quot;language-text&quot;&gt;bf&lt;/code&gt; is &lt;code class=&quot;language-text&quot;&gt;Either&lt;/code&gt; (sum) or &lt;code class=&quot;language-text&quot;&gt;(,)&lt;/code&gt; (product). In particular, it is bifunctorial.&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;Using these assumptions, we can deduce that &lt;code class=&quot;language-text&quot;&gt;BiComp&lt;/code&gt; is bifunctorial; indeed, we can declare its &lt;code class=&quot;language-text&quot;&gt;Bifunctor&lt;/code&gt; instance like this:&lt;/p&gt;
+&lt;div class=&quot;gatsby-highlight&quot; data-language=&quot;text&quot;&gt;&lt;pre class=&quot;language-text&quot;&gt;&lt;code class=&quot;language-text&quot;&gt;instance (Bifunctor bf, Functor fu, Functor gu) =&amp;gt;
+         Bifunctor (BiComp bf fu gu) where
+  bimap f g (BiComp x) = BiComp (bimap (fmap f) (fmap g) x)&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;To paraphrase Bartosz Milewski, &lt;code class=&quot;language-text&quot;&gt;bimap&lt;/code&gt; breaks through the outer &lt;code class=&quot;language-text&quot;&gt;bf&lt;/code&gt; layer, while the two &lt;code class=&quot;language-text&quot;&gt;fmap&lt;/code&gt;s dig under &lt;code class=&quot;language-text&quot;&gt;fu&lt;/code&gt; and &lt;code class=&quot;language-text&quot;&gt;gu&lt;/code&gt; respectively. So &lt;code class=&quot;language-text&quot;&gt;Bicomp bf fu gu&lt;/code&gt; is bifunctorial, in particular it is functorial in &lt;code class=&quot;language-text&quot;&gt;a&lt;/code&gt; and &lt;code class=&quot;language-text&quot;&gt;b&lt;/code&gt;. This gives us an intuition of Fact 2.&lt;/p&gt;
+&lt;h1&gt;“Proof” with code (Part 2)&lt;/h1&gt;
+&lt;p&gt;Let’s now consider Fact 3. Again, to simplify let us consider an ADT with two type parameters, such as &lt;code class=&quot;language-text&quot;&gt;Pair a b&lt;/code&gt; from above. The goal here is to prove that &lt;code class=&quot;language-text&quot;&gt;Pair a b&lt;/code&gt; is functorial in &lt;code class=&quot;language-text&quot;&gt;a&lt;/code&gt; and &lt;code class=&quot;language-text&quot;&gt;b&lt;/code&gt;.&lt;/p&gt;
+&lt;p&gt;We know from Fact 1 that such an ADT is isomorphic to a sum or product of &lt;code class=&quot;language-text&quot;&gt;Const ()&lt;/code&gt; or &lt;code class=&quot;language-text&quot;&gt;Identity&lt;/code&gt;. More precisely, &lt;code class=&quot;language-text&quot;&gt;Pair a b&lt;/code&gt; is isomorphic to the following type:&lt;/p&gt;
+&lt;div class=&quot;gatsby-highlight&quot; data-language=&quot;text&quot;&gt;&lt;pre class=&quot;language-text&quot;&gt;&lt;code class=&quot;language-text&quot;&gt;type Pair&amp;#39; a b = BiComp (,) Identity Identity a b&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;Indeed, this ismorhism can be expressed through the following two functions:&lt;/p&gt;
+&lt;div class=&quot;gatsby-highlight&quot; data-language=&quot;text&quot;&gt;&lt;pre class=&quot;language-text&quot;&gt;&lt;code class=&quot;language-text&quot;&gt;isoPair&amp;#39; :: Pair a b -&amp;gt; Pair&amp;#39; a b
+isoPair&amp;#39; (Pair (a, b)) = BiComp (Identity a, Identity b)
+
+isoPair :: Pair&amp;#39; a b -&amp;gt; Pair a b
+isoPair (BiComp (Identity a, Identity b)) = Pair (a, b)&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;From this, we can recover the functoriality of &lt;code class=&quot;language-text&quot;&gt;Pair&lt;/code&gt; in &lt;code class=&quot;language-text&quot;&gt;b&lt;/code&gt; like this:&lt;/p&gt;
+&lt;div class=&quot;gatsby-highlight&quot; data-language=&quot;text&quot;&gt;&lt;pre class=&quot;language-text&quot;&gt;&lt;code class=&quot;language-text&quot;&gt;instance Functor (Pair a) where
+  fmap f = isoPair . second f . isoPair&amp;#39;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;Where &lt;a href=&quot;https://hackage.haskell.org/package/base-4.12.0.0/docs/Data-Bifunctor.html#v:second&quot;&gt;second&lt;/a&gt; comes from the &lt;code class=&quot;language-text&quot;&gt;Bifunctor&lt;/code&gt; typeclass. The functoriality in &lt;code class=&quot;language-text&quot;&gt;a&lt;/code&gt; could be obtained by declaring a new type inverting &lt;code class=&quot;language-text&quot;&gt;a&lt;/code&gt; and &lt;code class=&quot;language-text&quot;&gt;b&lt;/code&gt;, much like in the previous section. So we finally got our result: &lt;code class=&quot;language-text&quot;&gt;Pair&lt;/code&gt; is functorial in &lt;code class=&quot;language-text&quot;&gt;a&lt;/code&gt; and &lt;code class=&quot;language-text&quot;&gt;b&lt;/code&gt;, and we have an explicit way of building the underlying functors from the basic functors &lt;code class=&quot;language-text&quot;&gt;Const ()&lt;/code&gt; and &lt;code class=&quot;language-text&quot;&gt;Indentity&lt;/code&gt;. &lt;/p&gt;
+&lt;p&gt;We can easily convince ourselves that this result holds any other sum / product of basic types. For example, let’s consider the &lt;code class=&quot;language-text&quot;&gt;Maybe&lt;/code&gt; type:&lt;/p&gt;
+&lt;div class=&quot;gatsby-highlight&quot; data-language=&quot;text&quot;&gt;&lt;pre class=&quot;language-text&quot;&gt;&lt;code class=&quot;language-text&quot;&gt;data Maybe a
+  = Nothing
+  | Just a&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;In this case it’s even easier since we have only one type parameter. We can build an isomorphic type out of the sum (&lt;code class=&quot;language-text&quot;&gt;Either&lt;/code&gt;) of &lt;code class=&quot;language-text&quot;&gt;Const ()&lt;/code&gt; and &lt;code class=&quot;language-text&quot;&gt;Identity&lt;/code&gt;:&lt;/p&gt;
+&lt;div class=&quot;gatsby-highlight&quot; data-language=&quot;text&quot;&gt;&lt;pre class=&quot;language-text&quot;&gt;&lt;code class=&quot;language-text&quot;&gt;type Maybe&amp;#39; a = BiComp Either (Const ()) Identity () a&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;The corresponding isomorphisms from &lt;code class=&quot;language-text&quot;&gt;Maybe&lt;/code&gt; to &lt;code class=&quot;language-text&quot;&gt;Maybe&amp;#39;&lt;/code&gt;:&lt;/p&gt;
+&lt;div class=&quot;gatsby-highlight&quot; data-language=&quot;text&quot;&gt;&lt;pre class=&quot;language-text&quot;&gt;&lt;code class=&quot;language-text&quot;&gt;isoMaybe&amp;#39; :: Maybe a -&amp;gt; Maybe&amp;#39; a
+isoMaybe&amp;#39; Nothing = BiComp (Left $ Const ())
+isoMaybe&amp;#39; (Just x) = BiComp (Right (Identity x))
+
+isoMaybe :: Maybe&amp;#39; a -&amp;gt; Maybe a
+isoMaybe (BiComp (Left _)) = Nothing
+isoMaybe (BiComp (Right (Identity x))) = Just x&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;And the following &lt;code class=&quot;language-text&quot;&gt;Functor&lt;/code&gt; instance:&lt;/p&gt;
+&lt;div class=&quot;gatsby-highlight&quot; data-language=&quot;text&quot;&gt;&lt;pre class=&quot;language-text&quot;&gt;&lt;code class=&quot;language-text&quot;&gt;instance Functor Maybe where
+  fmap f = isoMaybe . second f . isoMaybe&amp;#39;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;h1&gt;Conclusion&lt;/h1&gt;
+&lt;p&gt;This post turned out to be much longer than expected, and frankly speaking, quite annoying to write. But it definitely deepened my understanding of functor derivation in Haskell, and I hope it’s the same for you! You can find a gist containing the code &lt;a href=&quot;https://gist.github.com/vincent-prz/ec1837ce0361b748ddb1cd0911fadb6c&quot;&gt;here&lt;/a&gt;.&lt;/p&gt;</content:encoded></item><item><title><![CDATA[RC - 4 weeks checkpoint]]></title><description><![CDATA[This post is a log entry of my first 4 weeks at the Recurse Center (see initial post here). The RC experience So far RC has been a lot of…]]></description><link>https://gatsbystarterblogsource.gatsbyjs.io/rc-checkpoint/</link><guid isPermaLink="false">https://gatsbystarterblogsource.gatsbyjs.io/rc-checkpoint/</guid><pubDate>Fri, 25 Oct 2019 00:00:00 GMT</pubDate><content:encoded>&lt;p&gt;This post is a log entry of my first 4 weeks at the &lt;a href=&quot;https://www.recurse.com/&quot;&gt;Recurse Center&lt;/a&gt; (see initial post &lt;a href=&quot;/rc-goals/&quot;&gt;here&lt;/a&gt;).&lt;/p&gt;
+&lt;h2&gt;The RC experience&lt;/h2&gt;
+&lt;p&gt;So far RC has been a lot of fun. Those first 4 weeks have flown very fast. Finding the right balance between deep solo work and interaction has been one of the most difficult things.&lt;/p&gt;
+&lt;p&gt;I particularly appreciate the fact that there regular talk sessions (tech and non non tech). I gave a talk on Deep Work, from the &lt;a href=&quot;https://www.goodreads.com/book/show/25744928-deep-work&quot;&gt;eponymic book&lt;/a&gt;. I was pleasantly surprised by the positive feedback I got from it. By the way, I am trying to apply some rules from the book, I might write a post on this later.&lt;/p&gt;
+&lt;p&gt;I also enjoy pair programming with fellow recursers, which proved to be fun, instructive and demanding in terms of focus. Pair programming is made easy by a bot which automatically assigns pairing buddies every day.&lt;/p&gt;
+&lt;p&gt;Moreover, there is quite a significant pool of Haskellers in my batch, which I’m quite happy about.&lt;/p&gt;
+&lt;p&gt;Lastly, I feel fortunate to have been attending a &lt;a href=&quot;https://algorave.com/about/&quot;&gt;algorave&lt;/a&gt; concert, of which some fellow recursers are adepts.&lt;/p&gt;
+&lt;h2&gt;Build your own Lisp&lt;/h2&gt;
+&lt;p&gt;I went through 75% of the book, and have built an REPL which can do a bunch of things, you can checkout &lt;a href=&quot;https://github.com/vincent-prz/build_your_own_lisp&quot;&gt;the Github repository&lt;/a&gt; if you’re interested.
+.&lt;/p&gt;
+&lt;p&gt;(re) writing C code is very educational, and forced me to pull back concepts from my former student life, namely related to memory management, such as heap vs stack, pointers and friends. Speaking of which, my interpreter currently has some memory leaks (:ninja_face:) which I need to hunt down with Valgrind.&lt;/p&gt;
+&lt;p&gt;While the pedagogy of the book is great, I sometimes found myself lost in implementations considerations, with a lack of visibility on the bigger picture. I guess that’s a tradeoff inherent to a book with an implementation perspective.&lt;/p&gt;
+&lt;p&gt;I’m thinking about quickly skimming through the remainder of the book, without necesarily implement all the steps, to quickly switch to the next phase of my programming language adventures: implementing a basic lambda calculus interpreter.&lt;/p&gt;
+&lt;h2&gt;Building my own programming language: next steps&lt;/h2&gt;
+&lt;p&gt;Reading “build your own lisp ” was part of my larger objective to build my own programming language. After reading Build your own Lisp, I feel like I now need to get a more theoretical perspective, and after discussing with fellow recursers, the &lt;a href=&quot;https://www.goodreads.com/book/show/112252.Types_and_Programming_Languages&quot;&gt;Type and Programming Languages&lt;/a&gt; book seems promising. It’s in the RC library, so I don’t even have to buy it!&lt;/p&gt;
+&lt;p&gt;In particular, the book quickly covers the construction of a (untyped) lambda calculus interpreter, which seems to be a good next step.&lt;/p&gt;
+&lt;h2&gt;Cryptopals&lt;/h2&gt;
+&lt;p&gt;I initially planned on doing &lt;a href=&quot;https://cryptopals.com/&quot;&gt;the Cryptopals problems&lt;/a&gt; in Rust (and hence learning it at the same time). I quickly gave up on this plan, as it was taking me too much time. I might want to hack in Rust later in the batch though. For now I ditched Rust in favor of Haskell.&lt;/p&gt;
+&lt;p&gt;The problem set turned out to be harder than expected, and I found myself in a deep rabbit hole when doing problem 6.  But by the end of this problem, you have code which is able to break repeating-key XOR (&lt;a href=&quot;https://en.wikipedia.org/wiki/Vigen%C3%A8re_cipher&quot;&gt;Vigenere&lt;/a&gt;), which feels super rewarding!&lt;/p&gt;
+&lt;h2&gt;Category theory&lt;/h2&gt;
+&lt;p&gt;Besides, I joined a study group on category theory. I have been curious about this topic for a while, and taking advantage of the study group was too good of an opportunity to miss.&lt;/p&gt;
+&lt;p&gt;The material used for the study group is the book &lt;a href=&quot;https://www.goodreads.com/book/show/33618151-category-theory-for-programmers&quot;&gt;category theory for programmers&lt;/a&gt;. I have been through the first 4~5 chapters, and it’s been a delightful read so far.&lt;/p&gt;
+&lt;h2&gt;Cool stuff&lt;/h2&gt;
+&lt;p&gt;As a bonus, Here is a list of cool stuff I stumbled upon / learned about during my 4 first RC weeks:&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;a href=&quot;https://en.wikipedia.org/wiki/Heisenbug&quot;&gt;Heinsenbug&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;Quote from &lt;a href=&quot;dev.stephendiehl.com/fun/index.html&quot;&gt;write you a Haskell&lt;/a&gt;: “Writing an industrial strength programming language involves work on the order of hundreds of person-years and is an enormous engineering effort.”&lt;/li&gt;
+&lt;li&gt;&lt;a href=&quot;https://www.youtube.com/watch?v=eis11j_iGMs&quot;&gt;Lambda calculus&lt;/a&gt; and &lt;a href=&quot;https://www.youtube.com/watch?v=9T8A89jgeTI&quot;&gt;YCombinator&lt;/a&gt;. I was already acquainted to those amazing computer science concepts, but I took some time to tighten my grasp on them.&lt;/li&gt;
+&lt;li&gt;&lt;a href=&quot;https://tidalcycles.org/index.php/Welcome&quot;&gt;Tidal cycles&lt;/a&gt;. Make music with Haskell!&lt;/li&gt;
+&lt;li&gt;&lt;a href=&quot;https://wiki.haskell.org/GHC/Typed_holes&quot;&gt;Typed holes&lt;/a&gt;. A super cool Haskell feature which can help you figure out what code to write based on type inference.&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h2&gt;Final word&lt;/h2&gt;
+&lt;p&gt;That’s all I got in store for now. I may write more about my RC adventures.&lt;/p&gt;</content:encoded></item><item><title><![CDATA[My learning goals at Recurse Center]]></title><description><![CDATA[I recently arrived in New york, and will soon be attending the next 12 weeks batch of Recurse Center. In this post I am going to describe my…]]></description><link>https://gatsbystarterblogsource.gatsbyjs.io/rc-goals/</link><guid isPermaLink="false">https://gatsbystarterblogsource.gatsbyjs.io/rc-goals/</guid><pubDate>Sat, 21 Sep 2019 00:00:00 GMT</pubDate><content:encoded>&lt;p&gt;I recently arrived in New york, and will soon be attending the next 12 weeks batch of &lt;a href=&quot;https://www.recurse.com/&quot;&gt;Recurse Center&lt;/a&gt;. In this post I am going to describe my learning goals. I’m mainly doing this in order to give more structure to my experience of RC, and also for future reference, during and after the batch. But by chance it might also be of interest for other people :)&lt;/p&gt;
+&lt;h2&gt;Main project&lt;/h2&gt;
+&lt;p&gt;The main project I intend to be working on is to build my own programming language.  Namely, I’ll be writing an interpreter (or even a compiler) for a programming language of my creation. Well, this programming language will probably be a flavour of an existing language, and hence not revolutionize the landscape.&lt;/p&gt;
+&lt;p&gt;By the way, this language will be probably be a flavour of Lisp, since I plan to use &lt;a href=&quot;http://buildyourownlisp.com/&quot;&gt;this book&lt;/a&gt; as my main resource. One thing I’ll need to clarify is: in which language the interpreter will be built ? My main candidate was Haskell, because:&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;It seems particularly good at parsing stuff, &lt;a href=&quot;https://www.youtube.com/watch?v=r_Enynu_TV0&quot;&gt;with some good libraries&lt;/a&gt;.&lt;/li&gt;
+&lt;li&gt;I have been playing and having a lot of fun (and of course learning a lot) with it as a hobbyist, and I’d love to make a project of this size with it.&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;However, the book mentioned above uses C, and suprisingly enough, I have found very few resources for building its own language in Haskell (more on this later). One idea could be to &lt;i&gt;translate&lt;/i&gt; the concepts expressed in C in Haskell while reading the book. But adding this layer of complexity could make an already complex project too difficult to handle. And taking the time to learn and write C is probably a goal worth pursuing, so what could be done instead is:&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;Follow the book and write the language in C.&lt;/li&gt;
+&lt;li&gt;If time permits, rewrite the language in Haskell, and make a comparison.&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;Right now, I am favoring this latter approach.&lt;/p&gt;
+&lt;h2&gt;First order goals&lt;/h2&gt;
+&lt;p&gt;My primary goals related to this project are:&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;Have a better understanding of the underpinnings of programming languages, and form a knowledge of programming language theory (and related areas, such as type theory, programming paradigms, etc…).&lt;/li&gt;
+&lt;li&gt;Develop a better programming languages culture and history. I expect to be perfectly able to spell &lt;a href=&quot;https://en.wikipedia.org/wiki/Entscheidungsproblem&quot;&gt;Entscheidungsproblem&lt;/a&gt; by the end of the batch :).&lt;/li&gt;
+&lt;li&gt;Learn new languages. I may be using until 3 languages (2 of whom are close to unknwon to me at this time) in this project.&lt;/li&gt;
+&lt;li&gt;Feed this blog with interesting things learned along the way.&lt;/li&gt;
+&lt;li&gt;Become a better programmer.&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;Those goals are of course intertwined. &lt;/p&gt;
+&lt;h2&gt;Speculative goals&lt;/h2&gt;
+&lt;ul&gt;
+&lt;li&gt;Benchmark Haskell and C for building a language.&lt;/li&gt;
+&lt;li&gt;Fix the lack of resources in Haskell: I said above that I found very few resources on how to create a programming language in Haskell, so this project might be a chance to remedy to that. I could write a series of blog posts, or even an book ?&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h2&gt;Meta goals&lt;/h2&gt;
+&lt;ul&gt;
+&lt;li&gt;Join and be inspired by a great community. To get as much as possible from the experience, I intend to spend a fraction of my time collaborating with other Recursers, learning from them and getting inspired by some cool projects!&lt;/li&gt;
+&lt;li&gt;Find an equilibrium between action and reflection. I general, when working on projects, I tend to spend too much time thinking and analyzing before taking action. This is one area I hope to improve upon during my time at RC.&lt;/li&gt;
+&lt;li&gt;Have fun!&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h2&gt;Side project&lt;/h2&gt;
+&lt;p&gt;I also intend to dedicate a small fraction of my time to a side project. The main thing I have in mind is getting as far as possible in &lt;a href=&quot;https://cryptopals.com/&quot;&gt;the cryptopals challenge set&lt;/a&gt;. Indeed, I have been wanting to learn about cryptography for a while. Before that I have been trying to do this with a course on Coursera, and while the instructor and the content are great, I have found that I personally need a more active / “hands on” way of learning, and a problem set will definitely fit that bill. However, since I also like to back my skills with theoretical foundations, I’ll certainly need to be more proactive on this aspect.&lt;/p&gt;
+&lt;p&gt;Also, there seems to be a tradition on cryptopals which is to do the problem set in a language which we don’t know (and adding yet another language to my RC mix !!). I am currently thinking about Rust.&lt;/p&gt;
+&lt;h2&gt;Final word&lt;/h2&gt;
+&lt;p&gt;I may, as often, be overestimating the quantity of things I ‘ll be able to achieve. It’s also possible that things end up unfolding quite differently than described above. Anyway, writing this post has been interesting and useful (at least for me!) inasmuch as it allowed me to structure my thought process, and it will probably useful to come back to it when in doubt, even if I end up doing things very differently.&lt;/p&gt;
+&lt;p&gt;As stated above, I’ll probably write some more posts during the batch. Can’t wait to start!&lt;/p&gt;</content:encoded></item><item><title><![CDATA[The autotelic programmer]]></title><description><![CDATA[This article is the first of a series of articles inspired by my reading of Flow: The Psychology of Optimal Experience, by Mihaly…]]></description><link>https://gatsbystarterblogsource.gatsbyjs.io/autotelic-programmer/</link><guid isPermaLink="false">https://gatsbystarterblogsource.gatsbyjs.io/autotelic-programmer/</guid><pubDate>Wed, 18 Sep 2019 00:00:00 GMT</pubDate><content:encoded>&lt;p&gt;This article is the first of a series of articles inspired by my reading of &lt;a href=&quot;https://www.goodreads.com/book/show/66354.Flow&quot;&gt;Flow: The Psychology of Optimal Experience&lt;/a&gt;, by Mihaly Csikszentmihalyi. In the current instance, I will focus on the notion of autotelic personality, and see how it applies in the particular case of the programmer. My goal in this article is to show how, by pushing the programmer to set goals and renew her challenges, she can become more fulfilled, and hence happier. We will call &lt;i&gt;Flow&lt;/i&gt; such fulfillment and enjoyment.&lt;/p&gt;
+&lt;h2&gt;Comfort and boredom&lt;/h2&gt;
+&lt;p&gt;You may feel bored doing your everyday tasks. Or perhaps not even bored, but just feel very comfortable doing them. Csikszentmihalyi is arguing that neither of these  sensations are conducive to Flow, even though comfort is undoubtfully more desirable than boredom.&lt;/p&gt;
+&lt;p&gt;For instance, if you are a web developer using a MVC Framework (say Django or Ruby on Rails), you might at some point become too comfortable, or bored of repeating the pattern corresponding to creating a view: create the view per se, add an url, add a template, and so on. This of course is an extreme simplification of what it means to work in those web frameworks, and repeatitivity is not specific to them. My point is that regardless of your tasks as developer, there is a risk of repeatitivity which can either lead to boredom or too much comfort.&lt;/p&gt;
+&lt;p&gt;Generally speaking, Csikszentmihalyi has developed a model illustrating this need to have an adequation between skills and complexity. I will discuss this in a future an article. Now, how do we escape boredom or excess of comfort ?&lt;/p&gt;
+&lt;h2&gt;The autotelic welder&lt;/h2&gt;
+&lt;p&gt;In the book, Csikszentmihalyi gives the example of this welder who refused to get promoted and hence stayed in the lowest rung of the hierarchy in his plant. The reason for this was because he enjoyed performing every phase in the plant’s operation, and as a result mastered every single one of them.&lt;/p&gt;
+&lt;p&gt;This welder can be said to have an &lt;i&gt;autotelic&lt;/i&gt; personality. Autotelic comes from the two greek words &lt;i&gt;autos&lt;/i&gt;, which means self, and &lt;i&gt;telos&lt;/i&gt;, which means goal. Namely an autotelic person can turn one activity into an autotelic activity, that is a an activity with no other end than itself. Simply put, an autotelic activity is done for its own sake, not in the expectation of external rewards (such as fame or money). The welder performs his tasks not for extrinsical reasons (though that might have been the case in the beginning), but because he founds them intrinsically rewarding. Such persons can experience flow more easily than others.&lt;/p&gt;
+&lt;p&gt;How can the programmer take example from this welder to experience Flow ?&lt;/p&gt;
+&lt;h2&gt;The autotelic programmer&lt;/h2&gt;
+&lt;p&gt;In the book, Csikszentmihalyi gives 3 rules in order to help you develop an autotelic personality. The first one is to &lt;i&gt;set goals&lt;/i&gt;. As a programmer, you can for instance set learning goals. Much like the autotelic welder undertook to master every phase in the plant’s operation, the programmer could decide to further increase her knowledge of her tools, and find better ways to perform the same task. In the case of a MVC web framework such as Django, it could be like:&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;Level 1: learn how to write a view.&lt;/li&gt;
+&lt;li&gt;Level 2: write a custom routing logic.&lt;/li&gt;
+&lt;li&gt;Level X: write your own web server (not for using it, but for reaching a higher level of comprehension of the tool).&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;This is of course an arbitrary example, whose idea can be adapted to whatever piece of technology you are using.&lt;/p&gt;
+&lt;p&gt;The second given rule is to &lt;i&gt;get immersed&lt;/i&gt; in the task. This means not allowing distractions to prevent you from focusing on the task at hand. In the case of the welder, this could mean not being interrupted when trying to fix a broken machine. In the case of the typical 2019 developer, this can mean not consulting his email box every 5 minutes, or turning Slack off for a given chunk of time. My humble opinion is that the cognitive and emotional costs associated with the nearly permanent availability which often accompanies those communication means are underrated. On the over hand, the gains related to the associated serendipity, promoted by the startup culture, are overrated (Cal Newport has a lot to say on this topic, in his book &lt;a href=&quot;https://www.goodreads.com/book/show/25744928-deep-work?ac=1&amp;#x26;from_search=true&quot;&gt;Deep Work&lt;/a&gt;).&lt;/p&gt;
+&lt;p&gt;The third rule is to &lt;i&gt;pay attention to what is happening&lt;/i&gt;. In the case of the welder, this can mean noticing that there is a defect in an electric monitor, and set out to fix it. As for the autotelic programmer, she could pay attention to her environment to find out how such and such improvement could make things better. There is a bottleneck in your build pipeline ? Then invest time on it, and, for instance, parallelize it. Non technical people of your company keep wasting time in repetitive chores ? Try to see if you could help them by automating these chores.&lt;/p&gt;
+&lt;h2&gt;Final word&lt;/h2&gt;
+&lt;p&gt;Applying the aforementioned rules can be a strategy for the programmer who wishes to escape boredom or comfort, and reach a Flow state. As a reminder, those rules are:&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;Setting goals.&lt;/li&gt;
+&lt;li&gt;Get immersed in the task.&lt;/li&gt;
+&lt;li&gt;Pay attention to what is happening.&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;If you are not afraid of a long read, I can only recommend reading the book. Alternatively, you can get the gist of it with this &lt;a href=&quot;https://www.ted.com/talks/mihaly_csikszentmihalyi_on_flow&quot;&gt;TED talk&lt;/a&gt;. I’ll probably release more articles on this topic.&lt;/p&gt;</content:encoded></item></channel></rss>
